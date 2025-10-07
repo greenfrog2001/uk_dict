@@ -8,7 +8,10 @@ import os
 import urllib.parse
 
 # ========== CONFIG ==========
-API_KEY = "your_api_key_here"  # Merriam-Webster Collegiate API key
+# These two keys need to be put in a file.
+DICTIONARY_KEY = "e1fd3412-7310-4f5f-a50d-9b0c257660e1"
+THESAURUS_KEY = "816b0b3b-c13c-4179-aa49-8c0c98aa26ff"
+API_KEY = DICTIONARY_KEY  # Merriam-Webster Collegiate API key
 API_URL = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/{}?key={}"
 
 translator = Translator()
