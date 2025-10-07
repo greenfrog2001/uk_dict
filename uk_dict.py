@@ -20,7 +20,6 @@ def clear_result():
 
 
 def fetch_api(word, url_template, key):
-    """Gọi API và trả về dữ liệu JSON"""
     encoded_word = urllib.parse.quote(word)
     url = url_template.format(encoded_word, key)
     res = requests.get(url)
@@ -28,7 +27,7 @@ def fetch_api(word, url_template, key):
     return res.json()
 
 
-# ====== FEATURE 1: TRA CỨU NGHĨA ======
+# ====== FEATURE 1 ======
 def lookup_meaning():
     word = entry.get().strip()
     if not word:
@@ -40,7 +39,6 @@ def lookup_meaning():
 
     try:
         data = fetch_api(word, API_URL_DICT, DICTIONARY_KEY)
-
         if not data:
             result_text.insert(tk.END, "❌ Không tìm thấy kết quả.\n")
             return
@@ -79,7 +77,7 @@ def lookup_meaning():
         result_text.insert(tk.END, f"⚠️ Lỗi: {e}\n")
 
 
-# ====== FEATURE 2: TRA CỨU ĐỒNG NGHĨA & TRÁI NGHĨA ======
+# ====== FEATURE 2 ======
 def lookup_syn_ant():
     word = entry.get().strip()
     if not word:
@@ -91,7 +89,6 @@ def lookup_syn_ant():
 
     try:
         data = fetch_api(word, API_URL_THES, THESAURUS_KEY)
-
         if not data:
             result_text.insert(tk.END, "❌ Không tìm thấy dữ liệu.\n")
             return
@@ -127,7 +124,7 @@ def lookup_syn_ant():
         result_text.insert(tk.END, f"⚠️ Lỗi: {e}\n")
 
 
-# ====== FEATURE 3: TRA CỨU PHRASAL VERB ======
+# ====== FEATURE 3 ======
 def lookup_phrasal():
     word = entry.get().strip()
     if not word:
@@ -139,7 +136,6 @@ def lookup_phrasal():
 
     try:
         data = fetch_api(word, API_URL_DICT, DICTIONARY_KEY)
-
         if not data:
             result_text.insert(tk.END, "❌ Không tìm thấy cụm này.\n")
             return
@@ -153,7 +149,7 @@ def lookup_phrasal():
         found = False
         for entry_data in data:
             meta_id = entry_data.get("meta", {}).get("id", "")
-            if " " in meta_id:  # cụm có dấu cách => phrasal
+            if " " in meta_id:
                 found = True
                 defs = entry_data.get("shortdef", [])
                 result_text.insert(tk.END, f"{meta_id}\n", "word_style")
@@ -172,48 +168,57 @@ def lookup_phrasal():
 
 # ====== UI SETUP ======
 root = tk.Tk()
-root.title("📘 Smart Minimal Dictionary v3")
+root.title("📘 Smart Minimal Dictionary v4")
 root.geometry("700x620")
-root.configure(bg="#f6f6f6")
+root.configure(bg="#fde4ec")
 
 # Title
-title_label = ttk.Label(root, text="Smart Minimal Dictionary", font=("Helvetica", 20, "bold"), background="#f6f6f6")
+title_label = ttk.Label(root, text="Smart Minimal Dictionary", font=("Roboto", 20, "bold"),
+                        background="#fde4ec", foreground="#ad1457")
 title_label.pack(pady=15)
 
 # Input Frame
-frame = ttk.Frame(root)
+frame = ttk.Frame(root, style="Rounded.TFrame")
 frame.pack(pady=10)
 
-entry = ttk.Entry(frame, width=45, font=("Helvetica", 13))
-entry.pack(side=tk.LEFT, padx=5)
+entry = tk.Entry(frame, width=45, font=("Roboto", 13), relief="flat", bg="#fff0f6",
+                 highlightbackground="#f8bbd0", highlightcolor="#f48fb1",
+                 highlightthickness=2, bd=0)
+entry.pack(side=tk.LEFT, padx=5, ipady=6)
 entry.focus()
 
-# --- Buttons Row ---
+# Buttons
 button_frame = ttk.Frame(root)
 button_frame.pack(pady=5)
 
-btn_meaning = ttk.Button(button_frame, text="🔍 Tra nghĩa", command=lookup_meaning)
+btn_style = ttk.Style()
+btn_style.configure("Rounded.TButton",
+                    font=("Roboto", 11),
+                    padding=8,
+                    background="#f8bbd0",
+                    relief="flat")
+
+btn_meaning = ttk.Button(button_frame, text="🔍 Tra nghĩa", command=lookup_meaning, style="Rounded.TButton")
 btn_meaning.grid(row=0, column=0, padx=8)
 
-btn_synant = ttk.Button(button_frame, text="🟢 Đồng / Trái nghĩa", command=lookup_syn_ant)
+btn_synant = ttk.Button(button_frame, text="🟢 Đồng / Trái nghĩa", command=lookup_syn_ant, style="Rounded.TButton")
 btn_synant.grid(row=0, column=1, padx=8)
 
-btn_phrasal = ttk.Button(button_frame, text="📘 Phrasal Verb", command=lookup_phrasal)
+btn_phrasal = ttk.Button(button_frame, text="📘 Phrasal Verb", command=lookup_phrasal, style="Rounded.TButton")
 btn_phrasal.grid(row=0, column=2, padx=8)
 
 # Result Box
-result_text = tk.Text(root, wrap="word", font=("Helvetica", 12), height=25, relief="flat", bg="#f9f9f9", padx=10, pady=10)
-result_text.pack(fill="both", expand=True, padx=20, pady=10)
+result_frame = tk.Frame(root, bg="#fff0f6", highlightbackground="#f8bbd0", highlightthickness=2)
+result_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
-# Styles
-style = ttk.Style()
-style.configure("TButton", font=("Helvetica", 11), padding=6)
-style.configure("TEntry", padding=5)
-style.configure("TLabel", background="#f6f6f6")
+result_text = tk.Text(result_frame, wrap="word", font=("Roboto", 12), height=25,
+                      relief="flat", bg="#fff0f6", padx=10, pady=10, bd=0)
+result_text.pack(fill="both", expand=True)
 
-result_text.tag_configure("word_style", font=("Helvetica", 13, "bold"))
+# Tag Styles
+result_text.tag_configure("word_style", font=("Roboto", 13, "bold"), foreground="#880e4f")
 result_text.tag_configure("vi_style", foreground="#00897b")
-result_text.tag_configure("syn_style", foreground="#1e88e5")
-result_text.tag_configure("ant_style", foreground="#d32f2f")
+result_text.tag_configure("syn_style", foreground="#1565c0")
+result_text.tag_configure("ant_style", foreground="#d84315")
 
 root.mainloop()
