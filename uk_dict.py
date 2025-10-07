@@ -2,7 +2,7 @@ import requests
 import tkinter as tk
 from tkinter import ttk, messagebox
 from googletrans import Translator
-from playsound import playsound
+# from playsound import playsound
 import tempfile
 import os
 import urllib.parse
@@ -75,13 +75,13 @@ def lookup_word():
                     all_synonyms.add(s)
 
             # Lấy link phát âm (nếu có)
-            if not audio_link:
-                sound_data = entry_data.get("hwi", {}).get("prs", [])
-                if sound_data:
-                    audio = sound_data[0].get("sound", {}).get("audio")
-                    if audio:
-                        subdir = "gg" if audio.startswith("gg") else audio[0]
-                        audio_link = f"https://media.merriam-webster.com/audio/prons/en/us/mp3/{subdir}/{audio}.mp3"
+            # if not audio_link:
+            #     sound_data = entry_data.get("hwi", {}).get("prs", [])
+            #     if sound_data:
+            #         audio = sound_data[0].get("sound", {}).get("audio")
+            #         if audio:
+            #             subdir = "gg" if audio.startswith("gg") else audio[0]
+            #             audio_link = f"https://media.merriam-webster.com/audio/prons/en/us/mp3/{subdir}/{audio}.mp3"
 
             result_text.insert(tk.END, "\n")
 
@@ -94,30 +94,30 @@ def lookup_word():
             result_text.insert(tk.END, ", ".join(sorted(all_synonyms)) + "\n\n")
 
         # Nút phát âm
-        if audio_link:
-            play_button.config(state="normal")
-            play_button.audio_link = audio_link
-        else:
-            play_button.config(state="disabled")
+        # if audio_link:
+        #     play_button.config(state="normal")
+        #     play_button.audio_link = audio_link
+        # else:
+        #     play_button.config(state="disabled")
 
     except Exception as e:
         result_text.insert(tk.END, f"⚠️ Lỗi: {e}")
 
-def play_audio():
-    link = getattr(play_button, "audio_link", None)
-    if not link:
-        messagebox.showinfo("Thông báo", "Không có âm thanh cho từ này.")
-        return
-    try:
-        audio_data = requests.get(link)
-        audio_data.raise_for_status()
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
-            tmp.write(audio_data.content)
-            tmp_path = tmp.name
-        playsound(tmp_path)
-        os.remove(tmp_path)
-    except Exception as e:
-        messagebox.showerror("Lỗi phát âm", str(e))
+# def play_audio():
+#     link = getattr(play_button, "audio_link", None)
+#     if not link:
+#         messagebox.showinfo("Thông báo", "Không có âm thanh cho từ này.")
+#         return
+#     try:
+#         audio_data = requests.get(link)
+#         audio_data.raise_for_status()
+#         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
+#             tmp.write(audio_data.content)
+#             tmp_path = tmp.name
+#         playsound(tmp_path)
+#         os.remove(tmp_path)
+#     except Exception as e:
+#         messagebox.showerror("Lỗi phát âm", str(e))
 
 # ========== UI SETUP ==========
 root = tk.Tk()
@@ -140,8 +140,8 @@ entry.focus()
 search_btn = ttk.Button(frame, text="Tra cứu", command=lookup_word)
 search_btn.pack(side=tk.LEFT, padx=5)
 
-play_button = ttk.Button(frame, text="🔊 Phát âm", command=play_audio, state="disabled")
-play_button.pack(side=tk.LEFT, padx=5)
+# play_button = ttk.Button(frame, text="🔊 Phát âm", command=play_audio, state="disabled")
+# play_button.pack(side=tk.LEFT, padx=5)
 
 # Result Text
 result_text = tk.Text(root, wrap="word", font=("Helvetica", 12), height=22, relief="flat", bg="#f9f9f9", padx=10, pady=10)
