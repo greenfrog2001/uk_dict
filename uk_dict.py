@@ -411,11 +411,11 @@ scale_factor = get_scale_factor()
 # Cập nhật hệ số DPI (Windows thường mặc định là 1.0, nhưng có thể khác)
 root.tk.call('tk', 'scaling', scale_factor)
 
-root.title("📘 Smart Minimal Dictionary v6")
+root.title("📘 Sổ tay hướng dẫn mạo hiểm Toeic của Uyển Khanh")
 root.geometry(f"{scale(700, scale_factor)}x{scale(500, scale_factor)}")
 root.configure(bg="#fde4ec")
 
-title_label = tk.Label(root, text="Smart Minimal Dictionary", font=("Roboto", scale(20, scale_factor), "bold"), bg="#fde4ec", fg="#ad1457")
+title_label = tk.Label(root, text="SỔ TAY HƯỚNG DẪN MẠO HIỂM TOEIC", font=("Roboto", scale(20, scale_factor), "bold"), bg="#fde4ec", fg="#ad1457")
 title_label.pack(pady=scale(15, scale_factor))
 
 frame = tk.Frame(root, bg="#fde4ec")
