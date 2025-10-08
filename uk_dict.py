@@ -424,6 +424,7 @@ frame.pack(pady=scale(10, scale_factor))
 entry = tk.Entry(frame, width=45, font=("Roboto", scale(13, scale_factor)), relief="flat", bg="#fff0f6",
                  highlightthickness=2, highlightbackground="#f8bbd0", highlightcolor="#f48fb1")
 entry.pack(side=tk.LEFT, padx=scale(5, scale_factor), ipady=scale(6, scale_factor))
+entry.bind("<Return>", lambda event: lookup_meaning())
 
 # Placeholder setup
 placeholder_text = "Nhập từ hoặc cụm từ tiếng Anh..."
