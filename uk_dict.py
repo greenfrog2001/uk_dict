@@ -243,6 +243,8 @@ def open_essay_window():
     essay_win.geometry("700x600")
     essay_win.configure(bg="#fde4ec")
 
+    animate_zoom_in(essay_win)
+
     title = tk.Label(
         essay_win,
         text="📚 Danh sách bài văn mẫu",
@@ -304,6 +306,8 @@ def open_essay_window():
         detail_win.title(name)
         detail_win.geometry("700x600")
         detail_win.configure(bg="#fde4ec")
+
+        animate_zoom_in(detail_win)
 
         lbl_title = tk.Label(detail_win, text=name, font=(BASE_FONT, scale(18, scale_factor), "bold"),
                             bg="#fde4ec", fg="#ad1457")
@@ -408,6 +412,8 @@ def open_essay_window():
         popup.title("➕ Thêm bài mới")
         popup.geometry("500x400")
         popup.configure(bg="#fde4ec")
+
+        animate_zoom_in(popup)
 
         tk.Label(popup, text="Tiêu đề bài:", bg="#fde4ec", fg="#880e4f",
                  font=(BASE_FONT, scale(12, scale_factor), "bold")).pack(pady=scale(5, scale_factor))
@@ -579,6 +585,46 @@ def add_hover_effect(widget, normal_color, hover_color):
 for btn in [btn_meaning, btn_synant, btn_phrasal, btn_essays]:
     add_hover_effect(btn, "#f8bbd0", "#f48fb1")
 
+# Thêm hiệu ứng phóng to khi mở cửa sổ con
+def animate_zoom_in(window, duration=220, steps=15, scale_start=0.9):
+    """
+    Hiệu ứng phóng to nhẹ khi mở cửa sổ con.
+    - duration: thời gian tổng (ms)
+    - steps: số khung hình
+    - scale_start: tỉ lệ kích thước ban đầu (nhỏ hơn 1.0)
+    """
+    window.update_idletasks()
+    window.attributes("-alpha", 0.0)  # bắt đầu mờ
+    step_delay = duration // steps
+
+    # Lấy vị trí và kích thước ban đầu
+    w = window.winfo_width()
+    h = window.winfo_height()
+    x = window.winfo_x()
+    y = window.winfo_y()
+
+    # Nếu cửa sổ chưa render xong, fix tạm kích thước
+    if w == 1 or h == 1:
+        geometry = window.geometry()
+        size = geometry.split('+')[0]
+        w, h = [int(v) for v in size.split('x')]
+
+    def zoom(step=0):
+        ratio = scale_start + (1 - scale_start) * (step / steps)
+        new_w = int(w * ratio)
+        new_h = int(h * ratio)
+        new_x = x + (w - new_w) // 2
+        new_y = y + (h - new_h) // 2
+        window.geometry(f"{new_w}x{new_h}+{new_x}+{new_y}")
+        window.attributes("-alpha", ratio)
+
+        if step < steps:
+            window.after(step_delay, zoom, step + 1)
+        else:
+            window.geometry(f"{w}x{h}+{x}+{y}")
+            window.attributes("-alpha", 1.0)
+
+    zoom()
 
 # Result text
 result_frame = tk.Frame(root, bg="#fde4ec")
