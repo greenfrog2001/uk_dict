@@ -265,6 +265,7 @@ def open_essay_window():
         cursor="hand2"
     )
     back_main_btn.pack(pady=scale(5, scale_factor))
+    add_hover_effect(back_main_btn, "#f8bbd0", "#f48fb1")
 
     # ====== Frame chứa danh sách bài ======
     container = tk.Frame(essay_win, bg="#fde4ec")
@@ -293,6 +294,7 @@ def open_essay_window():
                 command=lambda n=name: open_essay_detail(n)
             )
             btn.pack(fill="x", ipadx=scale(5, scale_factor), ipady=scale(8, scale_factor))
+            add_hover_effect(btn, "#f8bbd0", "#f48fb1")
 
     def open_essay_detail(name):
         detail_win = tk.Toplevel(essay_win)
@@ -336,6 +338,7 @@ def open_essay_window():
             cursor="hand2"
         )
         back_btn.pack(pady=scale(10, scale_factor))
+        add_hover_effect(back_btn, "#f8bbd0", "#f48fb1")
 
     def add_new_essay_popup():
         popup = tk.Toplevel(essay_win)
@@ -383,6 +386,7 @@ def open_essay_window():
             cursor="hand2"
         )
         save_btn.pack(pady=scale(10, scale_factor))
+        add_hover_effect(save_btn, "#f8bbd0", "#f48fb1")
 
     # ====== Nút thêm bài mới ======
     add_btn = tk.Button(
@@ -400,6 +404,7 @@ def open_essay_window():
         cursor="hand2"
     )
     add_btn.pack(pady=scale(10, scale_factor))
+    add_hover_effect(add_btn, "#f8bbd0", "#f48fb1")
 
     refresh_list()
 
@@ -425,6 +430,7 @@ entry = tk.Entry(frame, width=45, font=("Roboto", scale(13, scale_factor)), reli
                  highlightthickness=2, highlightbackground="#f8bbd0", highlightcolor="#f48fb1")
 entry.pack(side=tk.LEFT, padx=scale(5, scale_factor), ipady=scale(6, scale_factor))
 entry.bind("<Return>", lambda event: lookup_meaning())
+
 
 # Placeholder setup
 placeholder_text = "Nhập từ hoặc cụm từ tiếng Anh..."
@@ -475,6 +481,41 @@ btn_phrasal.grid(row=0, column=2, padx=scale(8, scale_factor))
 
 btn_essays = create_pink_button("📚 Bài văn mẫu", open_essay_window)
 btn_essays.grid(row=0, column=3, padx=scale(8, scale_factor))
+
+# Tạo hiệu ứng hover mượt cho nút
+def hex_to_rgb(hex_color):
+    """Chuyển mã hex (#rrggbb) sang tuple RGB (r,g,b)."""
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def rgb_to_hex(rgb):
+    """Chuyển tuple RGB (r,g,b) sang mã hex."""
+    return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+
+def smooth_color_transition(widget, from_color, to_color, steps=15, delay=20):
+    """Hiệu ứng chuyển màu mượt cho hover."""
+    from_rgb = hex_to_rgb(from_color)
+    to_rgb = hex_to_rgb(to_color)
+
+    def step(i=0):
+        if i > steps:
+            return
+        ratio = i / steps
+        new_rgb = tuple(int(from_rgb[j] + (to_rgb[j] - from_rgb[j]) * ratio) for j in range(3))
+        widget.config(bg=rgb_to_hex(new_rgb), activebackground=rgb_to_hex(new_rgb))
+        widget.after(delay, step, i+1)
+
+    step()
+
+def add_hover_effect(widget, normal_color, hover_color):
+    """Thêm hiệu ứng hover mượt cho 1 widget."""
+    widget.bind("<Enter>", lambda e: smooth_color_transition(widget, normal_color, hover_color))
+    widget.bind("<Leave>", lambda e: smooth_color_transition(widget, hover_color, normal_color))
+
+# Thêm hiệu ứng hover mượt cho tất cả nút
+for btn in [btn_meaning, btn_synant, btn_phrasal, btn_essays]:
+    add_hover_effect(btn, "#f8bbd0", "#f48fb1")
+
 
 # Result text
 result_frame = tk.Frame(root, bg="#fde4ec")
