@@ -4,6 +4,7 @@ from tkinter import ttk, messagebox
 from deep_translator import GoogleTranslator
 import urllib.parse
 import time
+import threading
 
 # ====== CONFIG ======
 DICTIONARY_KEY = "e1fd3412-7310-4f5f-a50d-9b0c257660e1"
@@ -13,7 +14,6 @@ API_URL_DICT = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/
 API_URL_THES = "https://www.dictionaryapi.com/api/v3/references/thesaurus/json/{}?key={}"
 
 translator = GoogleTranslator(source="en", target="vi")
-
 
 # ====== TRANSLATE UTILITIES ======
 def safe_translate(text):
@@ -29,7 +29,6 @@ def safe_translate(text):
         print("⚠️ Lỗi dịch:", e)
         return text
 
-
 def batch_translate(sentences):
     """Dịch danh sách câu — từng câu một, tránh lỗi rate limit."""
     translated = []
@@ -38,11 +37,9 @@ def batch_translate(sentences):
         time.sleep(0.5)  # tránh gửi request quá nhanh
     return translated
 
-
 # ====== COMMON FUNCTION ======
 def clear_result():
     result_text.delete(1.0, tk.END)
-
 
 def fetch_api(word, url_template, key):
     encoded_word = urllib.parse.quote(word)
@@ -51,17 +48,13 @@ def fetch_api(word, url_template, key):
     res.raise_for_status()
     return res.json()
 
-
 # ====== FEATURE 1 ======
-import threading
-
-# cấu hình thời gian (có thể chỉnh)
-TRANSLATE_DELAY = 0.25   # giãn giữa các request dịch (giữ an toàn khỏi rate-limit)
-TYPING_DELAY_MS = 10     # tốc độ "gõ" từng ký tự (ms) -- 10 = 0.01s
+TRANSLATE_DELAY = 0.25
+TYPING_DELAY_MS = 10
 
 def lookup_meaning():
     word = entry.get().strip()
-    if not word:
+    if not word or word == placeholder_text:
         messagebox.showwarning("Cảnh báo", "Vui lòng nhập từ hoặc cụm cần tra.")
         return
 
@@ -86,7 +79,6 @@ def lookup_meaning():
             placeholder_items = []
 
             def show_english_and_placeholders():
-                # Hiển thị tiếng Anh ngay lập tức
                 for entry_data in data:
                     hw = entry_data.get("hwi", {}).get("hw", "")
                     fl = entry_data.get("fl", "")
@@ -96,9 +88,7 @@ def lookup_meaning():
                         result_text.insert(tk.END, f"{hw} ({fl})\n", "word_style")
 
                     for d in defs:
-                        # hiển thị nghĩa tiếng Anh
                         result_text.insert(tk.END, f"   • {d}\n")
-                        # hiển thị dòng placeholder
                         placeholder = "Đang dịch..."
                         result_text.insert(tk.END, f"     → {placeholder}\n")
                         placeholder_items.append((placeholder, d))
@@ -112,15 +102,11 @@ def lookup_meaning():
                     time.sleep(TRANSLATE_DELAY)
 
                     def start_typing(placeholder=placeholder, vi=vi):
-                        # Tìm vị trí của dòng "Đang dịch..."
                         idx = result_text.search(placeholder, "1.0", tk.END)
                         if not idx:
                             return
-
-                        # Xóa dòng đó (cả cụm "Đang dịch...")
                         result_text.delete(idx, f"{idx} + {len(placeholder)} chars")
 
-                        # Hiệu ứng gõ từng ký tự
                         def type_char(pos_index, i=0):
                             if i >= len(vi):
                                 return
@@ -128,7 +114,6 @@ def lookup_meaning():
                             next_pos = result_text.index(f"{pos_index} + 1 chars")
                             root.after(TYPING_DELAY_MS, lambda: type_char(next_pos, i+1))
 
-                        # Bắt đầu gõ tại vị trí dòng placeholder vừa xóa
                         type_char(idx, 0)
 
                     root.after(0, start_typing)
@@ -140,13 +125,10 @@ def lookup_meaning():
 
     threading.Thread(target=worker, daemon=True).start()
 
-
-
-
 # ====== FEATURE 2 ======
 def lookup_syn_ant():
     word = entry.get().strip()
-    if not word:
+    if not word or word == placeholder_text:
         messagebox.showwarning("Cảnh báo", "Vui lòng nhập từ cần tra.")
         return
 
@@ -189,11 +171,10 @@ def lookup_syn_ant():
     except Exception as e:
         result_text.insert(tk.END, f"⚠️ Lỗi: {e}\n")
 
-
 # ====== FEATURE 3 ======
 def lookup_phrasal():
     word = entry.get().strip()
-    if not word:
+    if not word or word == placeholder_text:
         messagebox.showwarning("Cảnh báo", "Vui lòng nhập cụm động từ cần tra.")
         return
 
@@ -215,7 +196,7 @@ def lookup_phrasal():
         found = False
         for entry_data in data:
             meta_id = entry_data.get("meta", {}).get("id", "")
-            if " " in meta_id:  # chỉ lấy cụm động từ
+            if " " in meta_id:
                 found = True
                 defs = entry_data.get("shortdef", [])
                 result_text.insert(tk.END, f"{meta_id}\n", "word_style")
@@ -231,14 +212,12 @@ def lookup_phrasal():
     except Exception as e:
         result_text.insert(tk.END, f"⚠️ Lỗi: {e}\n")
 
-
 # ====== UI SETUP ======
 root = tk.Tk()
 root.title("📘 Smart Minimal Dictionary v6")
 root.geometry("700x620")
-root.configure(bg="#fde4ec")  # nền hồng nhạt
+root.configure(bg="#fde4ec")
 
-# Title
 title_label = tk.Label(
     root,
     text="Smart Minimal Dictionary",
@@ -248,8 +227,7 @@ title_label = tk.Label(
 )
 title_label.pack(pady=15)
 
-# Input Frame
-frame = tk.Frame(root, bg="#fde4ec", highlightthickness=0, bd=0)
+frame = tk.Frame(root, bg="#fde4ec")
 frame.pack(pady=10)
 
 entry = tk.Entry(
@@ -261,17 +239,36 @@ entry = tk.Entry(
     highlightthickness=2,
     highlightbackground="#f8bbd0",
     highlightcolor="#f48fb1",
-    bd=0,
 )
 entry.pack(side=tk.LEFT, padx=5, ipady=6)
-entry.focus()
 
-# Button Frame
+# 🎀 Placeholder setup
+placeholder_text = "Nhập từ hoặc cụm từ tiếng Anh..."
+placeholder_color = "#b5b5b5"
+default_text_color = "#880e4f"
+
+def set_placeholder():
+    entry.insert(0, placeholder_text)
+    entry.config(fg=placeholder_color)
+
+def clear_placeholder(event=None):
+    if entry.get() == placeholder_text:
+        entry.delete(0, tk.END)
+        entry.config(fg=default_text_color)
+
+def restore_placeholder(event=None):
+    if entry.get() == "":
+        set_placeholder()
+
+entry.bind("<FocusIn>", clear_placeholder)
+entry.bind("<FocusOut>", restore_placeholder)
+set_placeholder()
+
 button_frame = tk.Frame(root, bg="#fde4ec")
 button_frame.pack(pady=5)
 
 def create_pink_button(text, command):
-    return tk.Button(
+    btn = tk.Button(
         button_frame,
         text=text,
         command=command,
@@ -285,8 +282,16 @@ def create_pink_button(text, command):
         padx=15,
         pady=6,
         cursor="hand2",
-        highlightthickness=0,
     )
+
+    def on_enter(e):
+        btn.config(bg="#f06292", fg="white")
+    def on_leave(e):
+        btn.config(bg="#f8bbd0", fg="#880e4f")
+
+    btn.bind("<Enter>", on_enter)
+    btn.bind("<Leave>", on_leave)
+    return btn
 
 btn_meaning = create_pink_button("🔍 Tra nghĩa", lookup_meaning)
 btn_meaning.grid(row=0, column=0, padx=8)
@@ -297,8 +302,7 @@ btn_synant.grid(row=0, column=1, padx=8)
 btn_phrasal = create_pink_button("📘 Phrasal Verb", lookup_phrasal)
 btn_phrasal.grid(row=0, column=2, padx=8)
 
-# Result Box
-result_frame = tk.Frame(root, bg="#fde4ec", highlightthickness=0)
+result_frame = tk.Frame(root, bg="#fde4ec")
 result_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
 result_text = tk.Text(
@@ -318,11 +322,9 @@ result_text = tk.Text(
 )
 result_text.pack(fill="both", expand=True)
 
-# Tag Styles
 result_text.tag_configure("word_style", font=("Roboto", 13, "bold"), foreground="#880e4f")
 result_text.tag_configure("vi_style", foreground="#00897b")
 result_text.tag_configure("syn_style", foreground="#1565c0")
 result_text.tag_configure("ant_style", foreground="#d84315")
-
 
 root.mainloop()
