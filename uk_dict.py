@@ -53,6 +53,12 @@ def fetch_api(word, url_template, key):
 
 
 # ====== FEATURE 1 ======
+import threading
+
+# cấu hình thời gian (có thể chỉnh)
+TRANSLATE_DELAY = 0.25   # giãn giữa các request dịch (giữ an toàn khỏi rate-limit)
+TYPING_DELAY_MS = 10     # tốc độ "gõ" từng ký tự (ms) -- 10 = 0.01s
+
 def lookup_meaning():
     word = entry.get().strip()
     if not word:
@@ -62,44 +68,79 @@ def lookup_meaning():
     clear_result()
     result_text.insert(tk.END, f"🔎 Tra cứu nghĩa của: {word}\n\n")
 
-    try:
-        data = fetch_api(word, API_URL_DICT, DICTIONARY_KEY)
-        if not data:
-            result_text.insert(tk.END, "❌ Không tìm thấy kết quả.\n")
-            return
+    def worker():
+        try:
+            data = fetch_api(word, API_URL_DICT, DICTIONARY_KEY)
+            if not data:
+                root.after(0, lambda: result_text.insert(tk.END, "❌ Không tìm thấy kết quả.\n"))
+                return
 
-        if isinstance(data[0], str):
-            result_text.insert(tk.END, "❌ Không tìm thấy. Gợi ý:\n")
-            for s in data:
-                result_text.insert(tk.END, f" - {s}\n")
-            return
+            if isinstance(data[0], str):
+                def show_suggestions():
+                    result_text.insert(tk.END, "❌ Không tìm thấy. Gợi ý:\n")
+                    for s in data:
+                        result_text.insert(tk.END, f" - {s}\n")
+                root.after(0, show_suggestions)
+                return
 
-        all_defs = []
-        for entry_data in data:
-            hw = entry_data.get("hwi", {}).get("hw", "")
-            fl = entry_data.get("fl", "")
-            defs = entry_data.get("shortdef", [])
-            if defs:
-                all_defs.extend(defs)
+            placeholder_items = []
 
-        vi_defs = batch_translate(all_defs)
+            def show_english_and_placeholders():
+                # Hiển thị tiếng Anh ngay lập tức
+                for entry_data in data:
+                    hw = entry_data.get("hwi", {}).get("hw", "")
+                    fl = entry_data.get("fl", "")
+                    defs = entry_data.get("shortdef", [])
 
-        for i, entry_data in enumerate(data):
-            hw = entry_data.get("hwi", {}).get("hw", "")
-            fl = entry_data.get("fl", "")
-            defs = entry_data.get("shortdef", [])
+                    if hw:
+                        result_text.insert(tk.END, f"{hw} ({fl})\n", "word_style")
 
-            if hw:
-                result_text.insert(tk.END, f"{hw} ({fl})\n", "word_style")
+                    for d in defs:
+                        # hiển thị nghĩa tiếng Anh
+                        result_text.insert(tk.END, f"   • {d}\n")
+                        # hiển thị dòng placeholder
+                        placeholder = "Đang dịch..."
+                        result_text.insert(tk.END, f"     → {placeholder}\n")
+                        placeholder_items.append((placeholder, d))
+                    result_text.insert(tk.END, "\n")
 
-            for d in defs:
-                vi = safe_translate(d)
-                result_text.insert(tk.END, f"   • {d}\n")
-                result_text.insert(tk.END, f"     → {vi}\n", "vi_style")
-            result_text.insert(tk.END, "\n")
+            root.after(0, show_english_and_placeholders)
 
-    except Exception as e:
-        result_text.insert(tk.END, f"⚠️ Lỗi: {e}\n")
+            def translate_thread():
+                for placeholder, definition in placeholder_items:
+                    vi = safe_translate(definition)
+                    time.sleep(TRANSLATE_DELAY)
+
+                    def start_typing(placeholder=placeholder, vi=vi):
+                        # Tìm vị trí của dòng "Đang dịch..."
+                        idx = result_text.search(placeholder, "1.0", tk.END)
+                        if not idx:
+                            return
+
+                        # Xóa dòng đó (cả cụm "Đang dịch...")
+                        result_text.delete(idx, f"{idx} + {len(placeholder)} chars")
+
+                        # Hiệu ứng gõ từng ký tự
+                        def type_char(pos_index, i=0):
+                            if i >= len(vi):
+                                return
+                            result_text.insert(pos_index, vi[i], "vi_style")
+                            next_pos = result_text.index(f"{pos_index} + 1 chars")
+                            root.after(TYPING_DELAY_MS, lambda: type_char(next_pos, i+1))
+
+                        # Bắt đầu gõ tại vị trí dòng placeholder vừa xóa
+                        type_char(idx, 0)
+
+                    root.after(0, start_typing)
+
+            threading.Thread(target=translate_thread, daemon=True).start()
+
+        except Exception as e:
+            root.after(0, lambda: result_text.insert(tk.END, f"⚠️ Lỗi: {e}\n"))
+
+    threading.Thread(target=worker, daemon=True).start()
+
+
 
 
 # ====== FEATURE 2 ======
