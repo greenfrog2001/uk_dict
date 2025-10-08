@@ -8,6 +8,9 @@ import threading
 import json
 import os
 
+# ====== GLOBAL FONT CONFIG ======
+BASE_FONT = "Segoe UI"  # hoặc "Helvetica" nếu dùng macOS
+
 # ====== AUTO SCALE UI ======
 def get_scale_factor(base_width=1366):
     screen_width = root.winfo_screenwidth() if 'root' in globals() else 1366
@@ -243,7 +246,7 @@ def open_essay_window():
     title = tk.Label(
         essay_win,
         text="📚 Danh sách bài văn mẫu",
-        font=("Roboto", scale(18, scale_factor), "bold"),
+        font=(BASE_FONT, scale(18, scale_factor), "bold"),
         bg="#fde4ec",
         fg="#ad1457"
     )
@@ -254,7 +257,7 @@ def open_essay_window():
         essay_win,
         text="⬅ Về màn hình chính",
         command=essay_win.destroy,
-        font=("Roboto", scale(11, scale_factor), "bold"),
+        font=(BASE_FONT, scale(11, scale_factor), "bold"),
         bg="#f8bbd0",
         fg="#880e4f",
         activebackground="#f48fb1",
@@ -283,7 +286,7 @@ def open_essay_window():
             btn = tk.Button(
                 frame_item,
                 text=name,
-                font=("Roboto", scale(12, scale_factor), "bold"),
+                font=(BASE_FONT, scale(12, scale_factor), "bold"),
                 bg="#f8bbd0",
                 fg="#880e4f",
                 relief="flat",
@@ -302,14 +305,14 @@ def open_essay_window():
         detail_win.geometry("700x600")
         detail_win.configure(bg="#fde4ec")
 
-        lbl_title = tk.Label(detail_win, text=name, font=("Roboto", scale(18, scale_factor), "bold"),
+        lbl_title = tk.Label(detail_win, text=name, font=(BASE_FONT, scale(18, scale_factor), "bold"),
                              bg="#fde4ec", fg="#ad1457")
         lbl_title.pack(pady=scale(10, scale_factor))
 
         txt = tk.Text(
             detail_win,
             wrap="word",
-            font=("Roboto", scale(12, scale_factor)),
+            font=(BASE_FONT, scale(12, scale_factor)),
             bg="#fff0f6",
             fg="#212121",
             padx=scale(10, scale_factor),
@@ -327,7 +330,7 @@ def open_essay_window():
             detail_win,
             text="🔙 Quay lại danh sách",
             command=detail_win.destroy,
-            font=("Roboto", scale(11, scale_factor), "bold"),
+            font=(BASE_FONT, scale(11, scale_factor), "bold"),
             bg="#f8bbd0",
             fg="#880e4f",
             activebackground="#f48fb1",
@@ -347,14 +350,14 @@ def open_essay_window():
         popup.configure(bg="#fde4ec")
 
         tk.Label(popup, text="Tiêu đề bài:", bg="#fde4ec", fg="#880e4f",
-                 font=("Roboto", scale(12, scale_factor), "bold")).pack(pady=scale(5, scale_factor))
-        title_entry = tk.Entry(popup, font=("Roboto", scale(12, scale_factor)), width=40, relief="flat",
+                 font=(BASE_FONT, scale(12, scale_factor), "bold")).pack(pady=scale(5, scale_factor))
+        title_entry = tk.Entry(popup, font=(BASE_FONT, scale(12, scale_factor)), width=40, relief="flat",
                                bg="#fff0f6", highlightthickness=2, highlightbackground="#f8bbd0")
         title_entry.pack(pady=scale(5, scale_factor))
 
         tk.Label(popup, text="Nội dung:", bg="#fde4ec", fg="#880e4f",
-                 font=("Roboto", scale(12, scale_factor), "bold")).pack(pady=scale(5, scale_factor))
-        content_text = tk.Text(popup, wrap="word", font=("Roboto", scale(11, scale_factor)), height=10,
+                 font=(BASE_FONT, scale(12, scale_factor), "bold")).pack(pady=scale(5, scale_factor))
+        content_text = tk.Text(popup, wrap="word", font=(BASE_FONT, scale(11, scale_factor)), height=10,
                                relief="flat", bg="#fff0f6", highlightthickness=2,
                                highlightbackground="#f8bbd0")
         content_text.pack(pady=scale(5, scale_factor), padx=scale(10, scale_factor), fill="both", expand=True)
@@ -375,7 +378,7 @@ def open_essay_window():
             popup,
             text="💾 Lưu bài mới",
             command=save_new,
-            font=("Roboto", scale(11, scale_factor), "bold"),
+            font=(BASE_FONT, scale(11, scale_factor), "bold"),
             bg="#f8bbd0",
             fg="#880e4f",
             activebackground="#f48fb1",
@@ -393,7 +396,7 @@ def open_essay_window():
         essay_win,
         text="➕ Thêm bài mới",
         command=add_new_essay_popup,
-        font=("Roboto", scale(11, scale_factor), "bold"),
+        font=(BASE_FONT, scale(11, scale_factor), "bold"),
         bg="#f8bbd0",
         fg="#880e4f",
         activebackground="#f48fb1",
@@ -420,13 +423,13 @@ root.title("📘 Sổ tay hướng dẫn mạo hiểm Toeic của Uyển Khanh")
 root.geometry(f"{scale(700, scale_factor)}x{scale(500, scale_factor)}")
 root.configure(bg="#fde4ec")
 
-title_label = tk.Label(root, text="SỔ TAY HƯỚNG DẪN MẠO HIỂM TOEIC", font=("Roboto", scale(20, scale_factor), "bold"), bg="#fde4ec", fg="#ad1457")
+title_label = tk.Label(root, text="SỔ TAY HƯỚNG DẪN MẠO HIỂM TOEIC", font=(BASE_FONT, scale(20, scale_factor), "bold"), bg="#fde4ec", fg="#ad1457")
 title_label.pack(pady=scale(15, scale_factor))
 
 frame = tk.Frame(root, bg="#fde4ec")
 frame.pack(pady=scale(10, scale_factor))
 
-entry = tk.Entry(frame, width=45, font=("Roboto", scale(13, scale_factor)), relief="flat", bg="#fff0f6",
+entry = tk.Entry(frame, width=45, font=(BASE_FONT, scale(13, scale_factor)), relief="flat", bg="#fff0f6",
                  highlightthickness=2, highlightbackground="#f8bbd0", highlightcolor="#f48fb1")
 entry.pack(side=tk.LEFT, padx=scale(5, scale_factor), ipady=scale(6, scale_factor))
 entry.bind("<Return>", lambda event: lookup_meaning())
@@ -460,7 +463,7 @@ button_frame.pack(pady=scale(5, scale_factor))
 
 def create_pink_button(text, command):
     btn = tk.Button(button_frame, text=text, command=command,
-                    font=("Roboto", scale(11, scale_factor), "bold"), bg="#f8bbd0", fg="#880e4f",
+                    font=(BASE_FONT, scale(11, scale_factor), "bold"), bg="#f8bbd0", fg="#880e4f",
                     activebackground="#f48fb1", activeforeground="white",
                     relief="flat", bd=0, padx=scale(15, scale_factor), pady=scale(6, scale_factor), cursor="hand2")
 
@@ -521,12 +524,12 @@ for btn in [btn_meaning, btn_synant, btn_phrasal, btn_essays]:
 result_frame = tk.Frame(root, bg="#fde4ec")
 result_frame.pack(fill="both", expand=True, padx=scale(20, scale_factor), pady=scale(10, scale_factor))
 
-result_text = tk.Text(result_frame, wrap="word", font=("Roboto", scale(12, scale_factor)), height=25, relief="flat",
+result_text = tk.Text(result_frame, wrap="word", font=(BASE_FONT, scale(12, scale_factor)), height=25, relief="flat",
                       bg="#fff0f6", fg="#212121", insertbackground="#ad1457", padx=scale(10, scale_factor), pady=scale(10, scale_factor),
                       bd=0, highlightthickness=2, highlightbackground="#f8bbd0")
 result_text.pack(fill="both", expand=True)
 
-result_text.tag_configure("word_style", font=("Roboto", scale(13, scale_factor), "bold"), foreground="#880e4f")
+result_text.tag_configure("word_style", font=(BASE_FONT, scale(13, scale_factor), "bold"), foreground="#880e4f")
 result_text.tag_configure("vi_style", foreground="#00897b")
 result_text.tag_configure("syn_style", foreground="#1565c0")
 result_text.tag_configure("ant_style", foreground="#d84315")
