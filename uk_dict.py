@@ -243,7 +243,7 @@ def open_essay_window():
     essay_win.geometry("700x600")
     essay_win.configure(bg="#fde4ec")
 
-    animate_zoom_in(essay_win)
+    animate_zoom_fade_in(essay_win)
 
     title = tk.Label(
         essay_win,
@@ -307,7 +307,7 @@ def open_essay_window():
         detail_win.geometry("700x600")
         detail_win.configure(bg="#fde4ec")
 
-        animate_zoom_in(detail_win)
+        animate_zoom_fade_in(detail_win)
 
         lbl_title = tk.Label(detail_win, text=name, font=(BASE_FONT, scale(18, scale_factor), "bold"),
                             bg="#fde4ec", fg="#ad1457")
@@ -413,7 +413,7 @@ def open_essay_window():
         popup.geometry("500x400")
         popup.configure(bg="#fde4ec")
 
-        animate_zoom_in(popup)
+        animate_zoom_fade_in(popup)
 
         tk.Label(popup, text="Tiêu đề bài:", bg="#fde4ec", fg="#880e4f",
                  font=(BASE_FONT, scale(12, scale_factor), "bold")).pack(pady=scale(5, scale_factor))
@@ -585,46 +585,52 @@ def add_hover_effect(widget, normal_color, hover_color):
 for btn in [btn_meaning, btn_synant, btn_phrasal, btn_essays]:
     add_hover_effect(btn, "#f8bbd0", "#f48fb1")
 
-# Thêm hiệu ứng phóng to khi mở cửa sổ con
-def animate_zoom_in(window, duration=220, steps=15, scale_start=0.9):
+# Thêm hiệu ứng phóng to và fade-in khi mở cửa sổ con
+def animate_zoom_fade_in(window, duration=250, steps=15, scale_start=0.9, alpha_start=0.0):
     """
-    Hiệu ứng phóng to nhẹ khi mở cửa sổ con.
+    Hiệu ứng phóng to + mờ dần khi mở cửa sổ con (Toplevel)
     - duration: thời gian tổng (ms)
-    - steps: số khung hình
-    - scale_start: tỉ lệ kích thước ban đầu (nhỏ hơn 1.0)
+    - steps: số khung hình (frame)
+    - scale_start: kích thước bắt đầu (0.9 = 90%)
+    - alpha_start: độ trong suốt ban đầu (0 = ẩn hoàn toàn)
     """
     window.update_idletasks()
-    window.attributes("-alpha", 0.0)  # bắt đầu mờ
     step_delay = duration // steps
 
-    # Lấy vị trí và kích thước ban đầu
+    # Lấy kích thước hiện tại
     w = window.winfo_width()
     h = window.winfo_height()
     x = window.winfo_x()
     y = window.winfo_y()
 
-    # Nếu cửa sổ chưa render xong, fix tạm kích thước
-    if w == 1 or h == 1:
-        geometry = window.geometry()
-        size = geometry.split('+')[0]
-        w, h = [int(v) for v in size.split('x')]
+    # Nếu cửa sổ chưa vẽ xong, fix kích thước
+    if w <= 1 or h <= 1:
+        geometry = window.geometry().split('+')[0]
+        w, h = [int(v) for v in geometry.split('x')]
 
-    def zoom(step=0):
+    # Đặt độ mờ ban đầu
+    window.attributes("-alpha", alpha_start)
+
+    def animate(step=0):
         ratio = scale_start + (1 - scale_start) * (step / steps)
+        alpha = alpha_start + (1 - alpha_start) * (step / steps)
+
         new_w = int(w * ratio)
         new_h = int(h * ratio)
         new_x = x + (w - new_w) // 2
         new_y = y + (h - new_h) // 2
+
         window.geometry(f"{new_w}x{new_h}+{new_x}+{new_y}")
-        window.attributes("-alpha", ratio)
+        window.attributes("-alpha", alpha)
 
         if step < steps:
-            window.after(step_delay, zoom, step + 1)
+            window.after(step_delay, animate, step + 1)
         else:
             window.geometry(f"{w}x{h}+{x}+{y}")
             window.attributes("-alpha", 1.0)
 
-    zoom()
+    animate()
+
 
 # Result text
 result_frame = tk.Frame(root, bg="#fde4ec")
