@@ -234,22 +234,22 @@ def lookup_phrasal():
 
 # ====== UI SETUP ======
 root = tk.Tk()
-root.title("📘 Smart Minimal Dictionary v5")
+root.title("📘 Smart Minimal Dictionary v6")
 root.geometry("700x620")
-root.configure(bg="#fde4ec")
+root.configure(bg="#fde4ec")  # nền hồng nhạt
 
 # Title
-title_label = ttk.Label(
+title_label = tk.Label(
     root,
     text="Smart Minimal Dictionary",
     font=("Roboto", 20, "bold"),
-    background="#fde4ec",
-    foreground="#ad1457",
+    bg="#fde4ec",
+    fg="#ad1457",
 )
 title_label.pack(pady=15)
 
 # Input Frame
-frame = ttk.Frame(root, style="Rounded.TFrame")
+frame = tk.Frame(root, bg="#fde4ec", highlightthickness=0, bd=0)
 frame.pack(pady=10)
 
 entry = tk.Entry(
@@ -258,42 +258,64 @@ entry = tk.Entry(
     font=("Roboto", 13),
     relief="flat",
     bg="#fff0f6",
+    highlightthickness=2,
     highlightbackground="#f8bbd0",
     highlightcolor="#f48fb1",
-    highlightthickness=2,
     bd=0,
 )
 entry.pack(side=tk.LEFT, padx=5, ipady=6)
 entry.focus()
 
-# Buttons
-button_frame = ttk.Frame(root)
+# Button Frame
+button_frame = tk.Frame(root, bg="#fde4ec")
 button_frame.pack(pady=5)
 
-btn_style = ttk.Style()
-btn_style.configure(
-    "Rounded.TButton",
-    font=("Roboto", 11),
-    padding=8,
-    background="#f8bbd0",
-    relief="flat",
-)
+def create_pink_button(text, command):
+    return tk.Button(
+        button_frame,
+        text=text,
+        command=command,
+        font=("Roboto", 11, "bold"),
+        bg="#f8bbd0",
+        fg="#880e4f",
+        activebackground="#f48fb1",
+        activeforeground="white",
+        relief="flat",
+        bd=0,
+        padx=15,
+        pady=6,
+        cursor="hand2",
+        highlightthickness=0,
+    )
 
-btn_meaning = ttk.Button(button_frame, text="🔍 Tra nghĩa", command=lookup_meaning, style="Rounded.TButton")
+btn_meaning = create_pink_button("🔍 Tra nghĩa", lookup_meaning)
 btn_meaning.grid(row=0, column=0, padx=8)
 
-btn_synant = ttk.Button(button_frame, text="🟢 Đồng / Trái nghĩa", command=lookup_syn_ant, style="Rounded.TButton")
+btn_synant = create_pink_button("🟢 Đồng / Trái nghĩa", lookup_syn_ant)
 btn_synant.grid(row=0, column=1, padx=8)
 
-btn_phrasal = ttk.Button(button_frame, text="📘 Phrasal Verb", command=lookup_phrasal, style="Rounded.TButton")
+btn_phrasal = create_pink_button("📘 Phrasal Verb", lookup_phrasal)
 btn_phrasal.grid(row=0, column=2, padx=8)
 
 # Result Box
-result_frame = tk.Frame(root, bg="#fff0f6", highlightbackground="#f8bbd0", highlightthickness=2)
+result_frame = tk.Frame(root, bg="#fde4ec", highlightthickness=0)
 result_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
-result_text = tk.Text(result_frame, wrap="word", font=("Roboto", 12), height=25,
-                      relief="flat", bg="#fff0f6", padx=10, pady=10, bd=0)
+result_text = tk.Text(
+    result_frame,
+    wrap="word",
+    font=("Roboto", 12),
+    height=25,
+    relief="flat",
+    bg="#fff0f6",
+    fg="#212121",
+    insertbackground="#ad1457",
+    padx=10,
+    pady=10,
+    bd=0,
+    highlightthickness=2,
+    highlightbackground="#f8bbd0",
+)
 result_text.pack(fill="both", expand=True)
 
 # Tag Styles
@@ -301,5 +323,6 @@ result_text.tag_configure("word_style", font=("Roboto", 13, "bold"), foreground=
 result_text.tag_configure("vi_style", foreground="#00897b")
 result_text.tag_configure("syn_style", foreground="#1565c0")
 result_text.tag_configure("ant_style", foreground="#d84315")
+
 
 root.mainloop()
