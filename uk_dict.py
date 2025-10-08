@@ -306,7 +306,7 @@ def open_essay_window():
         detail_win.configure(bg="#fde4ec")
 
         lbl_title = tk.Label(detail_win, text=name, font=(BASE_FONT, scale(18, scale_factor), "bold"),
-                             bg="#fde4ec", fg="#ad1457")
+                            bg="#fde4ec", fg="#ad1457")
         lbl_title.pack(pady=scale(10, scale_factor))
 
         txt = tk.Text(
@@ -322,26 +322,86 @@ def open_essay_window():
             highlightthickness=2,
             highlightbackground="#f8bbd0"
         )
+        # ====== Khung nút chức năng ======
+        btn_frame = tk.Frame(detail_win, bg="#fde4ec")
+        btn_frame.pack(pady=scale(10, scale_factor))
+        
         txt.pack(fill="both", expand=True, padx=scale(20, scale_factor), pady=scale(10, scale_factor))
         txt.insert(tk.END, essays[name])
-        txt.config(state="disabled")  # chỉ cho đọc
+        txt.config(state="disabled")
 
-        back_btn = tk.Button(
-            detail_win,
-            text="🔙 Quay lại danh sách",
-            command=detail_win.destroy,
-            font=(BASE_FONT, scale(11, scale_factor), "bold"),
-            bg="#f8bbd0",
-            fg="#880e4f",
-            activebackground="#f48fb1",
-            activeforeground="white",
-            relief="flat",
-            padx=scale(15, scale_factor),
-            pady=scale(6, scale_factor),
-            cursor="hand2"
-        )
+        def enable_edit():
+            txt.config(state="normal")
+            edit_btn.pack_forget()
+            delete_btn.pack_forget()
+            save_btn.pack(side="left", padx=scale(8, scale_factor))
+            cancel_btn.pack(side="left", padx=scale(8, scale_factor))
+
+        def save_changes():
+            essays[name] = txt.get("1.0", tk.END).strip()
+            save_essays(essays)
+            txt.config(state="disabled")
+            save_btn.pack_forget()
+            cancel_btn.pack_forget()
+            edit_btn.pack(side="left", padx=scale(8, scale_factor))
+            delete_btn.pack(side="left", padx=scale(8, scale_factor))
+            messagebox.showinfo("✅ Đã lưu", f"Đã cập nhật bài: {name}")
+
+        def cancel_edit():
+            txt.delete("1.0", tk.END)
+            txt.insert(tk.END, essays[name])
+            txt.config(state="disabled")    
+            save_btn.pack_forget()
+            cancel_btn.pack_forget()
+            edit_btn.pack(side="left", padx=scale(8, scale_factor))
+            delete_btn.pack(side="left", padx=scale(8, scale_factor))
+
+        def delete_essay():
+            if messagebox.askyesno("Xác nhận", f"Bạn có chắc muốn xóa bài '{name}' không?"):
+                del essays[name]
+                save_essays(essays)
+                detail_win.destroy()
+                messagebox.showinfo("🗑 Đã xóa", f"Đã xóa bài '{name}'.")
+                refresh_list()
+
+        edit_btn = tk.Button(btn_frame, text="✏ Chỉnh sửa", command=enable_edit,
+                            font=(BASE_FONT, scale(11, scale_factor), "bold"),
+                            bg="#f8bbd0", fg="#880e4f",
+                            activebackground="#f48fb1", activeforeground="white",
+                            relief="flat", padx=scale(15, scale_factor), pady=scale(6, scale_factor), cursor="hand2")
+        add_hover_effect(edit_btn, "#f8bbd0", "#f48fb1")
+        edit_btn.pack(side="left", padx=scale(8, scale_factor))
+
+        delete_btn = tk.Button(btn_frame, text="🗑 Xóa bài", command=delete_essay,
+                            font=(BASE_FONT, scale(11, scale_factor), "bold"),
+                            bg="#f8bbd0", fg="#880e4f",
+                            activebackground="#f48fb1", activeforeground="white",
+                            relief="flat", padx=scale(15, scale_factor), pady=scale(6, scale_factor), cursor="hand2")
+        add_hover_effect(delete_btn, "#f8bbd0", "#f48fb1")
+        delete_btn.pack(side="left", padx=scale(8, scale_factor))
+
+        save_btn = tk.Button(btn_frame, text="💾 Lưu bài", command=save_changes,
+                            font=(BASE_FONT, scale(11, scale_factor), "bold"),
+                            bg="#f8bbd0", fg="#880e4f",
+                            activebackground="#f48fb1", activeforeground="white",
+                            relief="flat", padx=scale(15, scale_factor), pady=scale(6, scale_factor), cursor="hand2")
+        add_hover_effect(save_btn, "#f8bbd0", "#f48fb1")
+
+        cancel_btn = tk.Button(btn_frame, text="❌ Hủy", command=cancel_edit,
+                            font=(BASE_FONT, scale(11, scale_factor), "bold"),
+                            bg="#f8bbd0", fg="#880e4f",
+                            activebackground="#f48fb1", activeforeground="white",
+                            relief="flat", padx=scale(15, scale_factor), pady=scale(6, scale_factor), cursor="hand2")
+        add_hover_effect(cancel_btn, "#f8bbd0", "#f48fb1")
+
+        back_btn = tk.Button(detail_win, text="🔙 Quay lại danh sách", command=detail_win.destroy,
+                            font=(BASE_FONT, scale(11, scale_factor), "bold"),
+                            bg="#f8bbd0", fg="#880e4f",
+                            activebackground="#f48fb1", activeforeground="white",
+                            relief="flat", padx=scale(15, scale_factor), pady=scale(6, scale_factor), cursor="hand2")
         back_btn.pack(pady=scale(10, scale_factor))
         add_hover_effect(back_btn, "#f8bbd0", "#f48fb1")
+
 
     def add_new_essay_popup():
         popup = tk.Toplevel(essay_win)
