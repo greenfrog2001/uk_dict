@@ -295,19 +295,48 @@ def open_essay_window():
     canvas.bind("<Configure>", resize_scroll_region)
     canvas.configure(yscrollcommand=scrollbar.set)
 
-    # --- Kích hoạt cuộn bằng con lăn chuột ---
-    def _on_mousewheel(event):
-        if event.num == 5 or event.delta == -120:
-            canvas.yview_scroll(1, "units")
-        elif event.num == 4 or event.delta == 120:
-            canvas.yview_scroll(-1, "units")
+    # ====== Hiệu ứng cuộn mượt có quán tính ======
+    scroll_speed = 0
+    is_scrolling = False
+    momentum_active = False
 
-    # Windows / Mac
-    canvas.bind_all("<MouseWheel>", _on_mousewheel)
-    # Linux (sử dụng event num 4 và 5)
-    canvas.bind_all("<Button-4>", _on_mousewheel)
-    canvas.bind_all("<Button-5>", _on_mousewheel)
+    def on_mousewheel(event):
+        """Xử lý cuộn có quán tính."""
+        nonlocal scroll_speed, momentum_active
 
+        # Chuẩn hóa delta giữa các hệ điều hành
+        delta = event.delta
+        if event.num == 5 or delta < 0:
+            delta = -1
+        elif event.num == 4 or delta > 0:
+            delta = 1
+
+        scroll_speed += delta * 3  # tăng tốc độ mỗi lần lăn
+        if not momentum_active:
+            momentum_active = True
+            apply_momentum_scroll()
+
+    def apply_momentum_scroll():
+        """Giảm dần tốc độ cuộn, mô phỏng quán tính."""
+        nonlocal scroll_speed, momentum_active
+        if abs(scroll_speed) < 0.1:
+            momentum_active = False
+            scroll_speed = 0
+            return
+
+        # Cuộn theo vận tốc hiện tại
+        canvas.yview_scroll(int(-scroll_speed), "units")
+
+        # Giảm dần vận tốc
+        scroll_speed *= 0.85  # hệ số ma sát
+
+        # Lặp lại animation
+        canvas.after(16, apply_momentum_scroll)  # ~60fps
+
+    # Ràng buộc sự kiện cho tất cả hệ điều hành
+    canvas.bind_all("<MouseWheel>", on_mousewheel)      # Windows / Mac
+    canvas.bind_all("<Button-4>", on_mousewheel)        # Linux (scroll up)
+    canvas.bind_all("<Button-5>", on_mousewheel)        # Linux (scroll down)
 
     canvas.pack(side="left", fill="both", expand=True)
     scrollbar.pack(side="right", fill="y")
@@ -624,23 +653,30 @@ def rgb_to_hex(rgb):
     """Chuyển tuple RGB (r,g,b) sang mã hex."""
     return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
 
-def smooth_color_transition(widget, from_color, to_color, steps=15, delay=20):
-    """Hiệu ứng chuyển màu mượt cho hover."""
+def smooth_color_transition(widget, from_color, to_color, steps=15, delay=15):
+    """Hiệu ứng chuyển màu mượt mà (có hủy animation cũ tránh giật)."""
+    # Nếu widget đã có animation đang chạy, hủy nó trước
+    if hasattr(widget, "_hover_job") and widget._hover_job:
+        widget.after_cancel(widget._hover_job)
+
     from_rgb = hex_to_rgb(from_color)
     to_rgb = hex_to_rgb(to_color)
 
     def step(i=0):
         if i > steps:
+            widget._hover_job = None
             return
         ratio = i / steps
         new_rgb = tuple(int(from_rgb[j] + (to_rgb[j] - from_rgb[j]) * ratio) for j in range(3))
-        widget.config(bg=rgb_to_hex(new_rgb), activebackground=rgb_to_hex(new_rgb))
-        widget.after(delay, step, i+1)
+        new_color = rgb_to_hex(new_rgb)
+        widget.config(bg=new_color, activebackground=new_color)
+        widget._hover_job = widget.after(delay, step, i + 1)
 
     step()
 
 def add_hover_effect(widget, normal_color, hover_color):
-    """Thêm hiệu ứng hover mượt cho 1 widget."""
+    """Thêm hiệu ứng hover mượt mà, tránh giật."""
+    widget._hover_job = None
     widget.bind("<Enter>", lambda e: smooth_color_transition(widget, normal_color, hover_color))
     widget.bind("<Leave>", lambda e: smooth_color_transition(widget, hover_color, normal_color))
 
