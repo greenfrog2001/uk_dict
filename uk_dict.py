@@ -280,7 +280,7 @@ def open_essay_window():
 
     def refresh_list():
         for widget in container.winfo_children():
-            lambda: close_with_animation(widget)
+            close_with_animation(widget)
 
         for name in essays.keys():
             frame_item = tk.Frame(container, bg="#fff0f6", bd=0, relief="flat",
@@ -368,7 +368,7 @@ def open_essay_window():
             if messagebox.askyesno("Xác nhận", f"Bạn có chắc muốn xóa bài '{name}' không?"):
                 del essays[name]
                 save_essays(essays)
-                lambda: close_with_animation(detail_win)
+                close_with_animation(detail_win)
                 messagebox.showinfo("🗑 Đã xóa", f"Đã xóa bài '{name}'.")
                 refresh_list()
 
@@ -443,7 +443,7 @@ def open_essay_window():
             essays[title] = content
             save_essays(essays)
             messagebox.showinfo("Thành công", f"Đã thêm bài: {title}")
-            lambda: close_with_animation(popup)
+            close_with_animation(popup)
             refresh_list()
 
         save_btn = tk.Button(
