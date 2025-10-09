@@ -258,7 +258,7 @@ def open_essay_window():
     back_main_btn = tk.Button(
         essay_win,
         text="⬅ Về màn hình chính",
-        command=essay_win.destroy,
+        command=lambda: close_with_animation(essay_win),
         font=(BASE_FONT, scale(11, scale_factor), "bold"),
         bg="#f8bbd0",
         fg="#880e4f",
@@ -278,7 +278,7 @@ def open_essay_window():
 
     def refresh_list():
         for widget in container.winfo_children():
-            widget.destroy()
+            lambda: close_with_animation(widget)
 
         for name in essays.keys():
             frame_item = tk.Frame(container, bg="#fff0f6", bd=0, relief="flat",
@@ -364,7 +364,7 @@ def open_essay_window():
             if messagebox.askyesno("Xác nhận", f"Bạn có chắc muốn xóa bài '{name}' không?"):
                 del essays[name]
                 save_essays(essays)
-                detail_win.destroy()
+                lambda: close_with_animation(detail_win)
                 messagebox.showinfo("🗑 Đã xóa", f"Đã xóa bài '{name}'.")
                 refresh_list()
 
@@ -398,7 +398,7 @@ def open_essay_window():
                             relief="flat", padx=scale(15, scale_factor), pady=scale(6, scale_factor), cursor="hand2")
         add_hover_effect(cancel_btn, "#f8bbd0", "#f48fb1")
 
-        back_btn = tk.Button(detail_win, text="🔙 Quay lại danh sách", command=detail_win.destroy,
+        back_btn = tk.Button(detail_win, text="🔙 Quay lại danh sách", command=lambda: close_with_animation(detail_win),
                             font=(BASE_FONT, scale(11, scale_factor), "bold"),
                             bg="#f8bbd0", fg="#880e4f",
                             activebackground="#f48fb1", activeforeground="white",
@@ -437,7 +437,7 @@ def open_essay_window():
             essays[title] = content
             save_essays(essays)
             messagebox.showinfo("Thành công", f"Đã thêm bài: {title}")
-            popup.destroy()
+            lambda: close_with_animation(popup)
             refresh_list()
 
         save_btn = tk.Button(
@@ -631,6 +631,46 @@ def animate_zoom_fade_in(window, duration=250, steps=15, scale_start=0.9, alpha_
 
     animate()
 
+# Hiệu ứng thu nhỏ và fade-out khi đóng cửa sổ con
+def animate_zoom_fade_out(window, duration=250, steps=15, scale_end=0.9, alpha_end=0.0, on_complete=None):
+    """
+    Hiệu ứng thu nhỏ + mờ dần khi đóng cửa sổ con.
+    - duration: tổng thời gian animation (ms)
+    - steps: số khung hình (frame)
+    - scale_end: kích thước cuối cùng (0.9 = 90%)
+    - alpha_end: độ trong suốt cuối cùng (0 = ẩn hoàn toàn)
+    - on_complete: hàm gọi sau khi animation xong (thường là window.destroy)
+    """
+    window.update_idletasks()
+    step_delay = duration // steps
+
+    w = window.winfo_width()
+    h = window.winfo_height()
+    x = window.winfo_x()
+    y = window.winfo_y()
+
+    def animate(step=0):
+        ratio = 1 - (1 - scale_end) * (step / steps)
+        alpha = 1 - (1 - alpha_end) * (step / steps)
+
+        new_w = int(w * ratio)
+        new_h = int(h * ratio)
+        new_x = x + (w - new_w) // 2
+        new_y = y + (h - new_h) // 2
+
+        window.geometry(f"{new_w}x{new_h}+{new_x}+{new_y}")
+        window.attributes("-alpha", alpha)
+
+        if step < steps:
+            window.after(step_delay, animate, step + 1)
+        else:
+            if on_complete:
+                on_complete()
+
+    animate()
+
+def close_with_animation(win):
+    animate_zoom_fade_out(win, on_complete=win.destroy)
 
 # Result text
 result_frame = tk.Frame(root, bg="#fde4ec")
