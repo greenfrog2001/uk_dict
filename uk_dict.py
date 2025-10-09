@@ -291,9 +291,22 @@ def open_essay_window():
 
     def resize_scroll_region(event):
         canvas.itemconfig(canvas_window, width=event.width)
-        
+
     canvas.bind("<Configure>", resize_scroll_region)
     canvas.configure(yscrollcommand=scrollbar.set)
+
+    # --- Kích hoạt cuộn bằng con lăn chuột ---
+    def _on_mousewheel(event):
+        if event.num == 5 or event.delta == -120:
+            canvas.yview_scroll(1, "units")
+        elif event.num == 4 or event.delta == 120:
+            canvas.yview_scroll(-1, "units")
+
+    # Windows / Mac
+    canvas.bind_all("<MouseWheel>", _on_mousewheel)
+    # Linux (sử dụng event num 4 và 5)
+    canvas.bind_all("<Button-4>", _on_mousewheel)
+    canvas.bind_all("<Button-5>", _on_mousewheel)
 
 
     canvas.pack(side="left", fill="both", expand=True)
