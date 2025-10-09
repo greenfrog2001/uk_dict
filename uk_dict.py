@@ -274,19 +274,58 @@ def open_essay_window():
     back_main_btn.pack(pady=scale(5, scale_factor))
     add_hover_effect(back_main_btn, "#f8bbd0", "#f48fb1")
 
-    # ====== Frame chứa danh sách bài ======
+    # ====== Frame chứa danh sách bài có thanh cuộn ======
     container = tk.Frame(essay_win, bg="#fde4ec")
     container.pack(fill="both", expand=True, padx=scale(20, scale_factor), pady=10)
 
+    canvas = tk.Canvas(container, bg="#fde4ec", highlightthickness=0)
+    scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+    scrollable_frame = tk.Frame(canvas, bg="#fde4ec")
+
+    # Gắn frame cuộn vào canvas
+    scrollable_frame.bind(
+        "<Configure>",
+        lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+    )
+    canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+    def resize_scroll_region(event):
+        canvas.itemconfig(canvas_window, width=event.width)
+        
+    canvas.bind("<Configure>", resize_scroll_region)
+    canvas.configure(yscrollcommand=scrollbar.set)
+
+
+    canvas.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+
+    # Gán list_frame = scrollable_frame để dễ gọi sau
+    list_frame = scrollable_frame
+
+
     def refresh_list():
-        for widget in container.winfo_children():
+        for widget in list_frame.winfo_children():
             close_with_animation(widget)
 
         for name in essays.keys():
-            frame_item = tk.Frame(container, bg="#fff0f6", bd=0, relief="flat",
-                                  highlightbackground="#f8bbd0", highlightthickness=2)
-            frame_item.pack(fill="x", pady=scale(6, scale_factor))
+            # ====== Thẻ chứa từng bài ======
+            frame_item = tk.Frame(
+                list_frame,
+                bg="#fff0f6",
+                bd=0,
+                relief="flat",
+                highlightbackground="#f8bbd0",
+                highlightthickness=2
+            )
+            # ✅ Căn giữa, có padding hai bên
+            frame_item.pack(
+                fill="x",
+                padx=scale(40, scale_factor),
+                pady=scale(6, scale_factor),
+                expand=True
+            )
 
+            # ====== Nút mở bài ======
             btn = tk.Button(
                 frame_item,
                 text=name,
@@ -298,9 +337,14 @@ def open_essay_window():
                 cursor="hand2",
                 activebackground="#f48fb1",
                 activeforeground="white",
+                padx=scale(15, scale_factor),
+                pady=scale(8, scale_factor),
                 command=lambda n=name: open_essay_detail(n)
             )
-            btn.pack(fill="x", ipadx=scale(5, scale_factor), ipady=scale(8, scale_factor))
+            # ✅ Làm nút dài và căn giữa trong frame_item
+            btn.pack(fill="x", expand=True, ipadx=scale(5, scale_factor), ipady=scale(8, scale_factor))
+
+            # ✅ Hiệu ứng hover mượt
             add_hover_effect(btn, "#f8bbd0", "#f48fb1")
 
     def open_essay_detail(name):
