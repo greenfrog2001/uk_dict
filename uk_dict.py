@@ -243,6 +243,8 @@ def open_essay_window():
     essay_win.geometry("700x600")
     essay_win.configure(bg="#fde4ec")
 
+    essay_win.protocol("WM_DELETE_WINDOW", lambda: close_with_animation(essay_win))
+
     animate_zoom_fade_in(essay_win)
 
     title = tk.Label(
@@ -306,6 +308,8 @@ def open_essay_window():
         detail_win.title(name)
         detail_win.geometry("700x600")
         detail_win.configure(bg="#fde4ec")
+
+        detail_win.protocol("WM_DELETE_WINDOW", lambda: close_with_animation(detail_win))
 
         animate_zoom_fade_in(detail_win)
 
@@ -412,6 +416,8 @@ def open_essay_window():
         popup.title("➕ Thêm bài mới")
         popup.geometry("500x400")
         popup.configure(bg="#fde4ec")
+
+        popup.protocol("WM_DELETE_WINDOW", lambda: close_with_animation(popup))
 
         animate_zoom_fade_in(popup)
 
