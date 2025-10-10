@@ -119,7 +119,12 @@ def save_word_to_flashcards(word, definition_vi, btn_widget):
     if definition_vi.startswith("→ "):
         definition_vi = definition_vi[2:].strip()
         
+    if not definition_vi.strip():
+        messagebox.showwarning("Cảnh báo", "Nghĩa không được để trống!")
+        return
+
     if word in flashcards:
+        # Trường hợp này có thể xảy ra nếu người dùng cố gắng lưu lần nữa
         messagebox.showinfo("Thông báo", f"Từ '{word}' đã có trong Flashcards!")
         return
         
@@ -127,18 +132,111 @@ def save_word_to_flashcards(word, definition_vi, btn_widget):
     save_flashcards_to_file(flashcards)
     
     # Update the button state to 'Saved' and disable the hover effect
-    btn_widget.config(
-        text="⭐ Đã lưu", 
-        command=lambda: None, # Vô hiệu hóa nút
-        bg="#a5d6a7", 
-        fg="#1b5e20", 
-        activebackground="#a5d6a7", 
-        activeforeground="#1b5e20"
-    )
-    btn_widget.unbind("<Enter>")
-    btn_widget.unbind("<Leave>")
+    if btn_widget:
+        btn_widget.config(
+            text="⭐ Đã lưu", 
+            # Lệnh mới: Chỉ thông báo đã lưu
+            command=lambda w=word: messagebox.showinfo("Thông báo", f"Từ '{w}' đã được lưu trong Flashcards!"), 
+            bg="#a5d6a7", 
+            fg="#1b5e20", 
+            activebackground="#a5d6a7", 
+            activeforeground="#1b5e20"
+        )
+        btn_widget.unbind("<Enter>")
+        btn_widget.unbind("<Leave>")
     
     messagebox.showinfo("Thành công", f"Đã thêm từ '{word}' vào Flashcards!")
+
+# ====== FUNCTION TO OPEN SAVE EDITOR POPUP ======
+def open_save_editor(word, definition_vi_initial, btn_trigger):
+    """Mở cửa sổ cho phép chỉnh sửa nghĩa trước khi lưu."""
+    
+    # Ngăn tạo nhiều cửa sổ cùng lúc
+    if hasattr(root, "_save_popup") and root._save_popup.winfo_exists():
+        root._save_popup.lift()
+        return
+
+    popup = tk.Toplevel(root)
+    popup.title(f"✏ Xác nhận & Chỉnh sửa nghĩa: {word}")
+    
+    popup.geometry(f"{scale(450, scale_factor)}x{scale(350, scale_factor)}") 
+    popup.configure(bg="#fde4ec")
+    root._save_popup = popup 
+    
+    popup.protocol("WM_DELETE_WINDOW", lambda: close_with_animation(popup))
+    animate_zoom_fade_in(popup)
+
+    # Tiêu đề
+    tk.Label(popup, text=f"Nghĩa tiếng Việt (Có thể chỉnh sửa)", 
+             font=(BASE_FONT, scale(13, scale_factor), "bold"), 
+             bg="#fde4ec", fg="#ad1457").pack(pady=scale(10, scale_factor))
+
+    # Text area để chỉnh sửa
+    text_area = tk.Text(
+        popup,
+        wrap="word",
+        font=(BASE_FONT, scale(11, scale_factor)),
+        bg="#fff0f6",
+        fg="#212121",
+        padx=scale(10, scale_factor),
+        pady=scale(10, scale_factor),
+        height=5,
+        relief="flat",
+        highlightthickness=2,
+        highlightbackground="#f8bbd0"
+    )
+    text_area.insert(tk.END, definition_vi_initial)
+    text_area.pack(fill="both", expand=True, padx=scale(10, scale_factor), pady=scale(5, scale_factor))
+
+    def final_save():
+        new_definition = text_area.get("1.0", tk.END).strip()
+        
+        # 1. Gọi hàm lưu chính thức, truyền button để cập nhật trạng thái trên giao diện chính
+        save_word_to_flashcards(word, new_definition, btn_trigger) 
+        
+        # 2. Đóng pop-up
+        close_with_animation(popup)
+        if hasattr(root, "_save_popup"): del root._save_popup 
+
+    # Frame chứa nút Hủy/Lưu
+    btn_frame = tk.Frame(popup, bg="#fde4ec")
+    btn_frame.pack(pady=scale(10, scale_factor))
+    
+    # Nút Hủy
+    cancel_btn = tk.Button(
+        btn_frame,
+        text="❌ Hủy",
+        command=lambda: close_with_animation(popup),
+        font=(BASE_FONT, scale(11, scale_factor), "bold"),
+        bg="#f8bbd0",
+        fg="#880e4f",
+        relief="flat",
+        padx=scale(15, scale_factor),
+        pady=scale(6, scale_factor),
+        cursor="hand2"
+    )
+    cancel_btn.pack(side="left", padx=scale(10, scale_factor))
+    add_hover_effect(cancel_btn, "#f8bbd0", "#f48fb1")
+    
+    # Nút Lưu (Có màu xanh lá cây để dễ nhận biết)
+    save_btn = tk.Button(
+        btn_frame,
+        text="💾 Lưu từ",
+        command=final_save,
+        font=(BASE_FONT, scale(11, scale_factor), "bold"),
+        bg="#a5d6a7",
+        fg="#1b5e20",
+        relief="flat",
+        padx=scale(15, scale_factor),
+        pady=scale(6, scale_factor),
+        cursor="hand2"
+    )
+    save_btn.pack(side="left", padx=scale(10, scale_factor))
+    add_hover_effect(save_btn, "#a5d6a7", "#81c784")
+
+    # Tự động chọn tất cả để dễ dàng thay thế
+    text_area.focus_set()
+    text_area.tag_add("sel", "1.0", tk.END)
 
 # ====== FEATURE 1: TỪ ĐIỂN NGHĨA - Đã FIX lỗi UnboundLocalError ======
 TRANSLATE_DELAY = 0.25
@@ -210,11 +308,11 @@ def lookup_meaning():
                 save_bg = "#f8bbd0" if not is_saved else "#a5d6a7"
                 save_fg = "#880e4f" if not is_saved else "#1b5e20"
                 
-                # BƯỚC 1: Tạo nút trước với command rỗng
+                # BƯỚC 1: Tạo nút trước
                 btn_save = tk.Button(
                     save_btn_placeholder_frame, 
                     text=save_text, 
-                    command=lambda: None, # Gán lệnh rỗng ban đầu để tránh lỗi
+                    command=lambda: None, # Tạm thời gán lệnh rỗng
                     font=(BASE_FONT, scale(11, scale_factor), "bold"),
                     bg=save_bg, 
                     fg=save_fg,
@@ -226,14 +324,16 @@ def lookup_meaning():
                     cursor="hand2"
                 )
 
-                # BƯỚC 2: Gán lệnh thực tế sau khi nút đã được tạo
+                # BƯỚC 2: Định nghĩa và gán lệnh thực tế
                 if not is_saved:
-                    # Gán command gọi hàm save_word_to_flashcards, truyền button object
-                    cmd = lambda w=word, d=definition, b=btn_save: save_word_to_flashcards(w, d, b)
+                    # Lệnh MỚI: Mở pop-up chỉnh sửa, truyền word, definition và chính btn_save này
+                    cmd = lambda w=word, d=definition, b=btn_save: open_save_editor(w, d, b)
                     btn_save.config(command=cmd)
                     add_hover_effect(btn_save, save_bg, "#f48fb1")
                 else:
-                    # Nếu đã lưu, command vẫn là lambda: None, và loại bỏ hover
+                    # Nếu đã lưu, command là thông báo, và loại bỏ hover
+                    cmd = lambda w=word: messagebox.showinfo("Thông báo", f"Từ '{w}' đã được lưu trong Flashcards!")
+                    btn_save.config(command=cmd)
                     btn_save.unbind("<Enter>")
                     btn_save.unbind("<Leave>")
                     
@@ -467,7 +567,7 @@ def close_with_animation(win):
     animate_zoom_fade_out(win, on_complete=win.destroy)
 
 
-# ====== FEATURE 4: FLASHCARDS MANAGER (Re-added) ======
+# ====== FEATURE 4: FLASHCARDS MANAGER (Đã thêm cuộn chuột) ======
 CARD_FRONT_COLOR = "#f48fb1"
 CARD_BACK_COLOR = "#880e4f"
 CARD_TEXT_COLOR = "white"
@@ -477,7 +577,7 @@ def open_flashcard_manager():
     
     manager_win = tk.Toplevel(root)
     manager_win.title("🃏 Hệ thống Flashcards")
-    # Đã giảm kích thước cơ sở
+    # Giữ kích thước cơ sở đã điều chỉnh
     manager_win.geometry(f"{scale(650, scale_factor)}x{scale(550, scale_factor)}") 
     manager_win.configure(bg="#fde4ec")
     manager_win.protocol("WM_DELETE_WINDOW", lambda: close_with_animation(manager_win))
@@ -516,7 +616,21 @@ def open_flashcard_manager():
     
     list_frame = scrollable_frame
     
-    # Card Flipping Logic
+    # ====== CHỨC NĂNG CUỘN CHUỘT MỚI ======
+    def _on_mousewheel(event):
+        """Xử lý sự kiện cuộn chuột."""
+        # Điều chỉnh tốc độ cuộn tùy thuộc hệ điều hành
+        if event.num == 5 or event.delta < 0:
+            canvas.yview_scroll(1, "units")
+        elif event.num == 4 or event.delta > 0:
+            canvas.yview_scroll(-1, "units")
+
+    # Gán sự kiện cuộn cho Canvas và Frame chứa (quan trọng)
+    canvas.bind_all("<MouseWheel>", _on_mousewheel)
+    canvas.bind_all("<Button-4>", _on_mousewheel)
+    canvas.bind_all("<Button-5>", _on_mousewheel)
+    
+    # --- Card Flipping Logic ---
     def flip_card(card_label, english_word, vietnamese_meaning):
         """Lật thẻ giữa tiếng Anh và tiếng Việt"""
         current_text = card_label.cget("text")
@@ -537,32 +651,37 @@ def open_flashcard_manager():
                 fg=CARD_TEXT_COLOR,
                 font=(BASE_FONT, scale(16, scale_factor), "bold")
             )
-        
-    # Delete Logic
+
+    # --- Delete Logic ---
     def delete_flashcard(word, callback):
         global flashcards
         if messagebox.askyesno("Xác nhận", f"Bạn có chắc muốn xóa từ '{word}' khỏi Flashcards?"):
             if word in flashcards:
                 del flashcards[word]
                 save_flashcards_to_file(flashcards)
-                messagebox.showinfo("Đã xóa", f"Đã xóa từ '{word}'.")
                 callback()
 
-    # Refresh Card List
+    # --- Refresh Card List (Đã thêm bind cuộn chuột cho các thẻ) ---
     def refresh_cards():
         # Xóa các widget cũ
         for widget in list_frame.winfo_children():
             widget.destroy()
             
         if not flashcards:
-            tk.Label(
+            lbl_no_cards = tk.Label(
                 list_frame, 
                 text="Chưa có Flashcards nào được lưu. \nBạn hãy tra từ và nhấn '⭐ Lưu từ' để bắt đầu! 😥", 
                 bg="#fde4ec", 
                 fg="#ad1457",
                 font=(BASE_FONT, scale(14, scale_factor), "bold"),
                 pady=scale(50, scale_factor)
-            ).pack(fill="x")
+            )
+            lbl_no_cards.pack(fill="x")
+            
+            # Gán sự kiện cuộn cho label này
+            lbl_no_cards.bind("<MouseWheel>", _on_mousewheel)
+            lbl_no_cards.bind("<Button-4>", _on_mousewheel)
+            lbl_no_cards.bind("<Button-5>", _on_mousewheel)
             return
             
         # Layout: Grid 2 columns for better space usage
@@ -575,16 +694,16 @@ def open_flashcard_manager():
             card_frame.grid(row=row, column=col, padx=scale(10, scale_factor), pady=scale(10, scale_factor), sticky="nsew")
             list_frame.grid_columnconfigure(col, weight=1)
 
-            # Label (the card itself)
+            # Label (the card itself) - Đã giảm kích thước như bạn yêu cầu
             card_label = tk.Label(
                 card_frame,
                 text=en_word,
                 font=(BASE_FONT, scale(16, scale_factor), "bold"),
                 bg=CARD_FRONT_COLOR,
                 fg=CARD_TEXT_COLOR,
-                height=scale(4, scale_factor),
-                width=scale(20, scale_factor),
-                wraplength=scale(200, scale_factor) 
+                height=scale(3, scale_factor),  # Giảm chiều cao
+                width=scale(18, scale_factor),  # Giảm chiều rộng
+                wraplength=scale(180, scale_factor) # Giảm độ rộng tối đa của chữ
             )
             card_label.pack(fill="both", expand=True, padx=scale(10, scale_factor), pady=scale(10, scale_factor))
             
@@ -605,6 +724,13 @@ def open_flashcard_manager():
             )
             add_hover_effect(delete_btn, "#e57373", "#f06292")
             delete_btn.pack(side="bottom", fill="x")
+
+            # ====== GÁN SỰ KIỆN CUỘN CHUỘT CHO CÁC WIDGET CON ======
+            # Quan trọng: Gán sự kiện cho tất cả các widget con để scroll khi di chuột qua chúng
+            for widget in (card_frame, card_label, delete_btn):
+                widget.bind("<MouseWheel>", _on_mousewheel)
+                widget.bind("<Button-4>", _on_mousewheel)
+                widget.bind("<Button-5>", _on_mousewheel)
             
     # --- Control Buttons ---
     control_frame = tk.Frame(manager_win, bg="#fde4ec")
