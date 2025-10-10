@@ -660,6 +660,9 @@ def open_flashcard_manager():
                 del flashcards[word]
                 save_flashcards_to_file(flashcards)
                 callback()
+        
+        # Đưa cửa sổ Flashcard lên trên cùng
+        manager_win.lift()
 
     # --- Refresh Card List (Đã thêm bind cuộn chuột cho các thẻ) ---
     def refresh_cards():
